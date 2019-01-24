@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://2immerse.eu/epg-schema.json",
+  "type": "object",
+  "definitions": {
+    "inputDoc": {
+      "type": "object",
+      "required": [ "inputDocUrl" ],
+      "properties": {
+        "inputDocUrl": { "type": "string", "examples": [ "/dmapps/football/client.json" ] },
+        "variations": { "type": "object" },
+        "overlay": { "type": "object" }
+      }
+    },
+    "serviceInput": {
+      "type": "object",
+      "required": [ "timelineDoc", "layoutDoc" ],
+      "properties": {
+        "timelineDoc": { "type": "string", "examples": [ "/dmapps/football/timeline.xml" ] },
+        "layoutDoc": { "type": "string", "examples": [ "/dmapps/football/layout.json" ] }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "inputDoc": { "$ref": "#/definitions/inputDoc" },
+        "serviceInput": { "$ref": "#/definitions/serviceInput" }
+      },
+      "oneOf": [
+        { "required": [ "inputDoc" ] }, 
+        { "required": [ "serviceInput" ] } 
+      ]
+    },
+    "deviceRole": {
+      "type": "object",
+      "required": [ "deployments" ],
+      "properties": {
+        "deployments": { "type": "object", "patternProperties": { "^[a-zA-Z_-]+$": { "$ref": "#/definitions/deployment" } } },
+        "master": { "type": "boolean" },
+        "required": { "type": "boolean" }
+      }
+    },
+    "programme": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "id": { "type": "integer" },
+        "profileKey": { "type": "string", "pattern": "^[a-zA-Z0-9_]+$" },
+        "titleText": { "type": "string" },
+        "captionText": { "type": "string" },
+        "descriptionText": { "type": "string" },
+        "imageUrl": { "type": "string", "examples": [ "/dmapps/football/images/image.png"] },
+        "deviceRoles": { "type": "object", "patternProperties": { "^[a-zA-Z0-9 ]+$": { "$ref": "#/definitions/deviceRole" } } }
+      }
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+.[0-9]+(.[0-9]+)?$",
+      "examples": [ "0.1", "1.0.1" ]
+    },
+    "programmes": { "type": "array", "items": { "$ref": "#/definitions/programme" } }
+  }
+}

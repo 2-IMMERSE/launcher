@@ -1,0 +1,40 @@
+{
+	"version": "0.1",
+	"programmes": [
+		{
+			"id": 0,
+			"profileKey": "programme_1_0_0",
+			"titleText": "Title",
+			"captionText": "Example caption",
+			"descriptionText": "Example description.",
+			"imageUrl": "http://www.example.com/image.png",
+			"deviceRoles": {
+				"Primary Communal": {
+					"required": true,
+					"master": true,
+					"deployments": {
+						"edge": {
+							"inputDoc": {
+								"inputDocUrl": "relative-path/client.json",
+								"variations": {},
+								"overlay": {}
+							}
+						}
+					}
+				},
+				"Secondary Communal": {
+					"required": false,
+					"deployments": {
+						"edge": {
+							"serviceInput": {
+								"layoutDoc": "somepath/layout.json",
+								"timelineDoc": "somepath/timeline.xml"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}
+

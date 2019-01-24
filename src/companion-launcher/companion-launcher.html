@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+
+<!--
+    # Copyright 2019 British Broadcasting Corporation
+    # 
+    # Licensed under the Apache License, Version 2.0 (the "License");
+    # you may not use this file except in compliance with the License.
+    # You may obtain a copy of the License at
+    # 
+    #   http://www.apache.org/licenses/LICENSE-2.0
+    # 
+    # Unless required by applicable law or agreed to in writing, software
+    # distributed under the License is distributed on an "AS IS" BASIS,
+    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    # See the License for the specific language governing permissions and
+    # limitations under the License.
+-->
+
+    <title>Companion Launcher</title>
+
+    <!-- Disable double tap to zoom detection to eliminate 300ms delays on touch events -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link href="css/companion-launcher.min.css" rel="stylesheet">
+
+<!--
+    This is the Android/cordova specific version of the companion launcher application.
+    webcomponents-lite.min.js and companion-emulator-bundle.html are loaded automatically by the android cordova app.
+-->
+
+</head>
+<body>
+
+   <template id="discovered-experience-template">
+        <div class="list-group-item">
+            <div class="session-description">
+                <h4 class="card-title"><span class="dmapp-name"></span></h4>
+                <span class="card-text"></span>
+                <span class="card-details">(<span class="ip-addr"></span>)</span>
+            </div>
+            <img class="card-img-top" alt="DMApp image">
+            <select class="custom-select">
+            </select>
+            <div class="join-buttons">
+                <button class="btn btn-lg btn-primary join" type="submit">Join</button>
+                <button class="btn btn-lg btn-primary stop" type="submit">Stop</button>
+            </div>
+        </div>
+    </template>
+
+   <template id="editor-session-template">
+        <div class="list-group-item">
+            <div class="session-description">
+                <h4 class="card-title"><span class="dmapp-name"></span></h4>
+                <span class="card-text"></span>
+                <span class="card-details"></span>
+            </div>
+            <img class="card-img-top" alt="DMApp image">
+        </div>
+    </template>
+
+    <template id="linked-device-template">
+        <div class="list-group-item">
+            <div>
+                <h5 class="linked-device-name"></h5>
+                <span class="linked-device-id"></span>
+            </div>
+            <img data-toggle="modal" data-target="#unpairDeviceModal" src="images/cross.svg" alt="cross"></img>
+        </div>
+    </template>
+
+    <template id="device-roles-template">
+        <div class="list-group-item">
+            <div class="dial-device-details">
+                <div class="dial-device-desc">
+                    <h5 class="linked-device-name"></h5>
+                    <select class="custom-select">
+                        <option value="">Not used</option>
+                    </select>
+                </div>
+                <div class="dial-device-udn">
+                    <img class="dial-device-img" src="data:image/jpeg;base64,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"></img>
+                    <span class="linked-device-id"></span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div class="launcher-container" style="height:100%;" data-state="state-load">
+
+        <div class="container state-load"></div>
+        
+        <div class="container state-login">
+            <!-- <div class="login-hr"></div> -->
+            <div class="card card-container">
+                <form action="#" class="form-signin" onsubmit="submitLogin()">
+                    <div class="two-immerse-logo-svg"></div>
+                    <!-- <img src="images/2immerse-logo-colour-small.svg" alt="2immerse logo"> -->
+
+                    <h4>Sign in</h4>
+                    <span class="error-message">Invalid login or password, try again!</span>
+                    <label for="userNameInput">Username</label>
+                    <input type="text" id="userNameInput" class="form-control" placeholder="" required autofocus autocorrect="off" autocapitalize="none" autocomplete="off">
+                    <label for="passwordInput">Password</label>
+                    <input type="password" id="passwordInput" class="form-control" placeholder="" required>
+                    <div id="remember">
+                        <label class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" value="remember-me" checked>
+                            <span class="custom-control-indicator"></span>
+                            <span class="custom-control-description">Remember me</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-lg btn-primary btn-block btn-submit" type="submit">Sign in</button>
+                </form>
+            </div> <!-- /card-container -->
+        </div> <!-- /container -->
+
+ 
+        <div class="container state-discover">
+
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="launch-tab" data-toggle="tab" href="#launch" role="tab" aria-controls="launch" aria-selected="true">Launch</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="join-tab" data-toggle="tab" href="#join" role="tab" aria-controls="join" aria-selected="false">Discover</a>
+                </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link" id="pair-tab" data-toggle="tab" href="#pair" role="tab" aria-controls="pair" aria-selected="false">Pair</a>
+                </li> -->
+                <li class="nav-item">
+                    <a class="nav-link" id="account-tab" data-toggle="tab" href="#account" role="tab" aria-controls="account" aria-selected="false">Account</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+
+                <div class="tab-pane active" id="launch" role="tabpanel" aria-labelledby="launch-tab">
+                    <div class="scroll-wrapper">
+                        <div id="launchList" class="scroll-container">
+                            <div class="list-group">
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                <div class="tab-pane" id="join" role="tabpanel" aria-labelledby="join-tab">
+                    <div class="scroll-wrapper">
+                        <div id="joinList" class="scroll-container">
+                            <div class="list-group">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="pair" role="tabpanel" aria-labelledby="pair-tab">
+                    <div class="pair-list-header">
+                        <label>Paired devices (<span id="numPairedDevices"></span>)</label>
+                        <!-- <img data-toggle="modal" data-target="#pairDeviceModal" src="images/plus.svg" alt="add"></img> -->
+                        <button type="submit" class="btn btn-primary btn-device-id" data-toggle="modal" data-target="#pairDeviceModal">Add</button>
+                    </div>
+                    <div class="scroll-wrapper">
+                        <div id="pairList" class="scroll-container">
+                            <div class="list-group">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="account" role="tabpanel" aria-labelledby="account-tab">
+                    <form action="#" class="form-signin" onsubmit="submitLogout()">
+                        <div class="account-tab">
+                            <span>
+                                <img style="width:64px;display:inline;margin-right:16px;" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIgogICB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnMiIKICAgdmlld0JveD0iMCAwIDIwIDIwIgogICBoZWlnaHQ9IjUuNjQ0NDQ0NW1tIgogICB3aWR0aD0iNS42NDQ0NDQ1bW0iPgogIDxkZWZzCiAgICAgaWQ9ImRlZnM0IiAvPgogIDxtZXRhZGF0YQogICAgIGlkPSJtZXRhZGF0YTciPgogICAgPHJkZjpSREY+CiAgICAgIDxjYzpXb3JrCiAgICAgICAgIHJkZjphYm91dD0iIj4KICAgICAgICA8ZGM6Zm9ybWF0PmltYWdlL3N2Zyt4bWw8L2RjOmZvcm1hdD4KICAgICAgICA8ZGM6dHlwZQogICAgICAgICAgIHJkZjpyZXNvdXJjZT0iaHR0cDovL3B1cmwub3JnL2RjL2RjbWl0eXBlL1N0aWxsSW1hZ2UiIC8+CiAgICAgICAgPGRjOnRpdGxlPjwvZGM6dGl0bGU+CiAgICAgIDwvY2M6V29yaz4KICAgIDwvcmRmOlJERj4KICA8L21ldGFkYXRhPgogIDxnCiAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwtMC4wNDA3NzY1MSkiCiAgICAgaWQ9ImxheWVyMSI+CiAgICA8ZwogICAgICAgaWQ9Imc0MjkwIj4KICAgICAgPGNpcmNsZQogICAgICAgICBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzczNzM3MztmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtzdHJva2Utd2lkdGg6NTtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6NDtzdHJva2UtZGFzaGFycmF5Om5vbmU7c3Ryb2tlLWRhc2hvZmZzZXQ6MDtzdHJva2Utb3BhY2l0eToxIgogICAgICAgICBpZD0icGF0aDQxMzgiCiAgICAgICAgIGN4PSIxMCIKICAgICAgICAgY3k9IjEwLjA0MDc3NiIKICAgICAgICAgcj0iMTAiIC8+CiAgICAgIDxjaXJjbGUKICAgICAgICAgc3R5bGU9Im9wYWNpdHk6MTtmaWxsOiNmZmZmZmY7ZmlsbC1vcGFjaXR5OjE7c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjU7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLWxpbmVqb2luOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjQ7c3Ryb2tlLWRhc2hhcnJheTpub25lO3N0cm9rZS1kYXNob2Zmc2V0OjA7c3Ryb2tlLW9wYWNpdHk6MSIKICAgICAgICAgaWQ9InBhdGg0MTQwIgogICAgICAgICBjeD0iOS45Njg0MzE1IgogICAgICAgICBjeT0iOC40ODY5MDg5IgogICAgICAgICByPSIzLjAwNTA3NjIiIC8+CiAgICAgIDxwYXRoCiAgICAgICAgIHN0eWxlPSJvcGFjaXR5OjE7ZmlsbDojZmZmZmZmO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDo1O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDo0O3N0cm9rZS1kYXNoYXJyYXk6bm9uZTtzdHJva2UtZGFzaG9mZnNldDowO3N0cm9rZS1vcGFjaXR5OjEiCiAgICAgICAgIGQ9Im0gOS45NjI2MzMsMTMuNjQzNDQzIGEgNS40MTg5NzMzLDYuMzIyMTM1NSAwIDAgMCAtNC41MzY5NzgsMi44NzYwMDcgNy4yMjUyOTc4LDcuMjI1Mjk3OCAwIDAgMCA0LjYwMTg5MywxLjY1OTU2MSA3LjIyNTI5NzgsNy4yMjUyOTc4IDAgMCAwIDQuNTE3MjIyLC0xLjU4NzU5IDUuNDE4OTczMyw2LjMyMjEzNTUgMCAwIDAgLTQuNTgyMTM3LC0yLjk0Nzk3OCB6IgogICAgICAgICBpZD0icGF0aDQxMzgtNSIgLz4KICAgIDwvZz4KICA8L2c+Cjwvc3ZnPgo=" alt="user"></img>
+                                <span class="user-credentials-container">
+                                    <div class="user-name">Anonymous</div>
+                                    <div class="email-addr">anonymous@anonymous.anon</div>
+                                </span>
+                            </span>
+                            <button class="btn btn-primary btn-submit" type="submit">Sign out</button>
+                        </div>
+                    </form>
+                    <div class="app-info">
+                        <div class="app-info-label">Server Env:<span class="app-info-value" id="server-env"></span></div>
+                        <div class="app-info-label">EPG URL:<span class="app-info-value" id="epg"></span></div>
+                        <div class="app-info-label">Service Presets URL:<span class="app-info-value" id="service-presets-url"></span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="container state-device-manager">
+            <nav class="navbar navbar-2immerse other-page-nav">
+                <div class="nav-bar-flex">
+                    <span>
+                        <i class="back-arrow"></i>
+                        <span class="container-title">Launch Configuration</span>
+                    </span>
+                </div>
+                <hr/>
+            </nav>
+            <div class="tab-pane"> 
+                <div id="deviceList" class="form-signin active">
+                    <div class="pair-list-header">
+                        <div>
+                            <h4 class="launch-config-title"></h4>
+                            <span class="card-text launch-config-desc"></span>
+                        </div>
+                        <button id="launchButton" type="submit" class="btn btn-primary btn-device-id">Launch</button>
+                        <!--
+                        <img class="card-img-top" alt="DMApp image">
+                        -->
+                    </div>
+                    <div class="device-list-sep">
+                        <label>Configure device roles:</label>
+                    </div>
+                    <div class="scroll-wrapper">
+                        <div class="scroll-container">
+                            <div class="list-group">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="unpairDeviceModal" class="modal fade" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p>Unpair device from account?</p>
+                        <span class="error-message">Failed to unpair device, try again?</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-device-id">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pairDeviceModal" class="modal fade" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Pair a device with your account</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <form class="form-signin" onsubmit="submitPairingCode()">
+                        <div class="modal-body">
+                            <img class="tv-welcome" src="images/tv-welcome.svg"></img>
+                            <p>Enter the pairing code displayed on your device</p>
+                            <div class="form-group">
+                                <label for="deviceIdInput">Pairing code</label>
+                                <input type="text" class="form-control" id="deviceIdInput" name="deviceId" required autocorrect="off" autocapitalize="none" autocomplete="off">
+                                <span class="error-message">Invalid pairing code, try again?</span>
+                                <label for="deviceIdInput">Give the device a friendly name</label>
+                                <input type="text" class="form-control" id="deviceNameInput" name="deviceName" required autocorrect="off" autocapitalize="none" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary btn-device-id">Pair</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-alert" class="alert alert-danger alert-dismissible collapse" role="alert">
+            <h4 class="alert-heading">Error!</h4>
+            <button type="button" class="close" data-dismiss="error-alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <p class="launch-error-message">The following device roles have not been fulfilled.</p>
+            <hr>
+            <div class="error-message-supplemental">
+                <ul>
+                    <p class="mb-0">TODO: List required device roles here.</p>
+                </ul>
+            </div>
+        </div>
+
+    </div> <!-- state -->
+    <script src="js/companion-launcher.min.js"></script>
+
+</body>
+</html>

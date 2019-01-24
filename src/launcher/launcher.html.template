@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+
+<!--
+    # Copyright 2019 British Broadcasting Corporation
+    # 
+    # Licensed under the Apache License, Version 2.0 (the "License");
+    # you may not use this file except in compliance with the License.
+    # You may obtain a copy of the License at
+    # 
+    #   http://www.apache.org/licenses/LICENSE-2.0
+    # 
+    # Unless required by applicable law or agreed to in writing, software
+    # distributed under the License is distributed on an "AS IS" BASIS,
+    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    # See the License for the specific language governing permissions and
+    # limitations under the License.
+-->
+
+	<!-- Disable double tap to zoom detection to eliminate 300ms delays on touch events -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+    <title>Launcher</title>
+
+	<link href="css/launcher.min.css" rel="stylesheet">
+
+	<script src="###CLIENT_DEPLOYMENT_BASE_URL###/deps/deps/webcomponentsjs/webcomponents-lite.min.js"></script>
+	<link rel="import" href="###CLIENT_DEPLOYMENT_BASE_URL###/bundle/dist/tv-emulator-bundle.html" />
+
+    <!-- Alternatively use relative paths if the client-api is deployed alongside the launcher in the same dir -->
+<!--
+    <script src="deps/deps/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="bundle/dist/tv-emulator-bundle.html" />
+-->
+
+</head>
+<body data-state="netup">
+
+    <div class="flex-column content" id="welcome-screen">
+        <div class="header">
+            <img class="immerse-logo" src="images/2immerse-logo-colour-small.svg">
+            <p class="text-secondary time">00/00 00:00</p>
+        </div>
+        
+        <div class="main state-netup">
+            <div class="flex-column-half">
+                <div class="flex-row">
+                    <p class="text-title">Welcome</p>
+                </div>
+                <p class="text-secondary">Use the 2-IMMERSE companion to launch a programme on this TV.</p>
+                <!--<p class="code" id="code">...</p>-->
+                <p class="text-secondary friendly-name"></p>
+
+            </div>
+            <img src="images/devices.svg" id="device-img">
+        </div>
+
+        <div class="main state-pending">
+            <div class="flex-row ">
+                <p class="loading-text">Checking Network Connection...</p>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="wifi-status pulse">
+                <img id="wifi-signal-indicator" src="images/wifi.svg">
+                <p id="ip-addr-wifi" class="text-tertiary"></p>
+            </div>
+            <div class="wired-status pulse">
+                <img id="ethernet-icon" src="images/ethernet.svg">
+                <p id="ip-addr-wired" class="text-tertiary"></p> 
+            </div>
+        </div>
+
+        <div id="spinner" class="spinner">
+            <img src="images/waiting-2.svg">
+        </div>
+
+    </div>  
+
+	<script src="js/launcher.min.js"></script>
+</body>
+</html>
+
